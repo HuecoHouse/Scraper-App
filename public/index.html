@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <div class="container">
+  <div class="crt-container">
     <h1>Deal Tracker</h1>
-    <p>Scanning TCGplayer every 3 hours automatically. Use manual scan or add search options below.</p>
+    <p>Automatically scans search options every 3 hours. Use manual scan or add search options below.</p>
     <button id="manual-scan">Run Manual Scan</button>
     <h2>Search Options</h2>
     <ul id="options-list"></ul>
@@ -17,6 +17,8 @@
       <input type="text" id="new-option" placeholder="Enter product line (e.g., pokemon, yugioh)" required />
       <button type="submit">Add Option</button>
     </form>
+    <h2>Results</h2>
+    <div id="results"></div>
     <p id="status"></p>
   </div>
   <script>
@@ -25,19 +27,40 @@
       const data = await res.json();
       const list = document.getElementById('options-list');
       list.innerHTML = '';
-      data.searchOptions.forEach((opt) => {
+      data.searchOptions.forEach(opt => {
         const li = document.createElement('li');
         li.textContent = opt;
         list.appendChild(li);
       });
     }
+
+    function renderResults(results) {
+      const resultsContainer = document.getElementById('results');
+      resultsContainer.innerHTML = '';
+      if (!results || results.length === 0) {
+        resultsContainer.textContent = 'No deals found under 40% of market price.';
+        return;
+      }
+      results.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'deal';
+        div.innerHTML = `<h3>${item.name}</h3>` +
+                        `<p>Store: ${item.store}</p>` +
+                        `<p>Price: $${item.price.toFixed(2)} | Market: $${item.marketPrice.toFixed(2)}</p>` +
+                        `<a href="${item.link}" target="_blank">View Deal</a>`;
+        resultsContainer.appendChild(div);
+      });
+    }
+
     document.getElementById('manual-scan').addEventListener('click', async () => {
       const status = document.getElementById('status');
       status.textContent = 'Running scan...';
       const res = await fetch('/manual-scan', { method: 'POST' });
       const data = await res.json();
       status.textContent = data.message;
+      renderResults(data.results);
     });
+
     document.getElementById('add-option-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const newOpt = document.getElementById('new-option').value.trim();
@@ -45,11 +68,12 @@
       await fetch('/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newOption: newOpt }),
+        body: JSON.stringify({ newOption: newOpt })
       });
       document.getElementById('new-option').value = '';
       await fetchOptions();
     });
+
     fetchOptions();
   </script>
 </body>
