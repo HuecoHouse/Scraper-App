@@ -1,7 +1,7 @@
 // index.js (replace your existing server file with this or merge accordingly)
 import express from 'express';
 import axios from 'axios';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import pkg from 'https-proxy-agent';
 const { HttpsProxyAgent } = pkg;
 import path from 'path';
