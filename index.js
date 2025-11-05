@@ -6,6 +6,7 @@ import pkg from 'https-proxy-agent';
 const { HttpsProxyAgent } = pkg;
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Fuse from 'fuse.js'; // add to package.json: "fuse.js": "^7.0.0"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -161,6 +162,17 @@ function filterDeals(allResults, marketPrice, percentage) {
 }
 
 // Manual scan endpoint
+// Fuzzy matching on titles
+if (term) {
+  const fuse = new Fuse(allResults, {
+    keys: ['title'],
+    threshold: 0.4,   // 0 = exact, 1 = match everything; 0.3–0.4 feels natural
+  });
+  const fuzzyResults = fuse.search(term).map(res => res.item);
+  allResults = fuzzyResults.length ? fuzzyResults : allResults;
+  console.log(`[FUZZY] Matched ${fuzzyResults.length} of ${allResults.length} listings`);
+}
+
 app.post('/manual-scan', async (req, res) => {
   const { term = '', percentage = 40, sources = ['tcgplayer','ebay'] } = req.body;
   console.log(`[SCRAPER] Starting manual scan for "${term}" | pct: ${percentage}% | sources: ${sources.join(',')}`);
