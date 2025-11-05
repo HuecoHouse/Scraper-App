@@ -10,6 +10,17 @@
   <div class="crt-container">
     <h1>Deal Tracker</h1>
     <p>Automatically scans search options every 3 hours. Use manual scan or add search options below.</p>
+    <h2>Scan Settings</h2>
+    <label>Percentage threshold:
+      <input type="number" id="percentage" value="40" min="0" max="100" step="1"> %
+    </label>
+    <div id="sources">
+      <label><input type="checkbox" value="tcgplayer" checked> TCGplayer</label>
+      <label><input type="checkbox" value="ebay" checked> eBay</label>
+      <label><input type="checkbox" value="walmart"> Walmart</label>
+      <label><input type="checkbox" value="target"> Target</label>
+      <label><input type="checkbox" value="amazon"> Amazon</label>
+    </div>
     <button id="manual-scan">Run Manual Scan</button>
     <h2>Search Options</h2>
     <ul id="options-list"></ul>
@@ -38,16 +49,17 @@
       const resultsContainer = document.getElementById('results');
       resultsContainer.innerHTML = '';
       if (!results || results.length === 0) {
-        resultsContainer.textContent = 'No deals found under 40% of market price.';
+        resultsContainer.textContent = 'No deals found for current scan.';
         return;
       }
       results.forEach(item => {
         const div = document.createElement('div');
         div.className = 'deal';
-        div.innerHTML = `<h3>${item.name}</h3>` +
-                        `<p>Store: ${item.store}</p>` +
-                        `<p>Price: $${item.price.toFixed(2)} | Market: $${item.marketPrice.toFixed(2)}</p>` +
-                        `<a href="${item.link}" target="_blank">View Deal</a>`;
+        div.innerHTML =
+          '<h3>' + item.title + '</h3>' +
+          '<p>Source: ' + item.source + '</p>' +
+          '<p>Price: $' + item.price.toFixed(2) + ' | Market: $' + item.marketPrice.toFixed(2) + '</p>' +
+          '<a href="' + item.link + '" target="_blank">View Deal</a>';
         resultsContainer.appendChild(div);
       });
     }
@@ -55,9 +67,15 @@
     document.getElementById('manual-scan').addEventListener('click', async () => {
       const status = document.getElementById('status');
       status.textContent = 'Running scan...';
-      const res = await fetch('/manual-scan', { method: 'POST' });
+      const pct = parseFloat(document.getElementById('percentage').value) || 40;
+      const checkedSources = Array.from(document.querySelectorAll('#sources input[type=checkbox]:checked')).map(cb => cb.value);
+      const res = await fetch('/manual-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ percentage: pct, sources: checkedSources })
+      });
       const data = await res.json();
-      status.textContent = data.message;
+      status.textContent = data.message || '';
       renderResults(data.results);
     });
 
