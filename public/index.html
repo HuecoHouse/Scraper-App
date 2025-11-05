@@ -12,15 +12,22 @@
     <p>Automatically scans search options every 3 hours. Use manual scan or add search options below.</p>
     <h2>Scan Settings</h2>
     <label>Percentage threshold:
-      <input type="number" id="percentage" value="40" min="0" max="100" step="1"> %
+      <input type="number" id="percentage" value="0" min="0" max="100" step="1"> %
     </label>
-    <div id="sources">
-      <label><input type="checkbox" value="tcgplayer" checked> TCGplayer</label>
-      <label><input type="checkbox" value="ebay" checked> eBay</label>
-      <label><input type="checkbox" value="walmart"> Walmart</label>
-      <label><input type="checkbox" value="target"> Target</label>
-      <label><input type="checkbox" value="amazon"> Amazon</label>
-    </div>
+    <input id="search-term" placeholder="Enter search term">
+<input id="percentage" type="number" value="40">
+<div>
+  <label><input type="checkbox" name="source" value="tcgplayer" checked> TCGplayer</label>
+  <label><input type="checkbox" name="source" value="ebay" checked> eBay</label>
+  <label><input type="checkbox" name="source" value="amazon"> Amazon</label>
+  <label><input type="checkbox" name="source" value="walmart"> Walmart</label>
+  <label><input type="checkbox" name="source" value="target"> Target</label>
+</div>
+<button id="scan-btn">SCAN</button>
+
+<div id="status" class="status"></div>
+<div id="results"></div>
+
     <button id="manual-scan">Run Manual Scan</button>
     <h2>Search Options</h2>
     <ul id="options-list"></ul>
