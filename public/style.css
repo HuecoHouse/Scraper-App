@@ -4,7 +4,19 @@ body {
   font-family: 'Courier New', Courier, monospace;
   text-shadow: 0 0 2px #00ff00;
   margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.crt-container {
+  background: #001100;
+  border: 4px solid #00ff00;
+  box-shadow: 0 0 20px #00ff00;
   padding: 20px;
+  width: 90%;
+  max-width: 600px;
 }
 
 h1, h2 {
@@ -39,4 +51,8 @@ ul {
 
 li {
   margin: 3px 0;
+}
+
+#results {
+  margin-top: 10px;
 }
