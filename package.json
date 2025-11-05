@@ -1,0 +1,16 @@
+{
+  "name": "scraper-app",
+  "version": "1.0.0",
+  "description": "Pokemon scraper app for deals",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.5.1",
+    "cheerio": "^1.0.0-rc.12",
+    "nodemailer": "^6.9.4"
+  }
+}
