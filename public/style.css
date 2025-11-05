@@ -170,6 +170,12 @@ button:active {
 .deal-card a:hover {
   text-decoration: underline;
 }
+.hint {
+  display: block;
+  font-size: 0.85rem;
+  color: #ffb00099;
+  margin-top: 2px;
+}
 
 /* ---------- SCROLLBAR ---------- */
 #results::-webkit-scrollbar {
