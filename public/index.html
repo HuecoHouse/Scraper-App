@@ -3,37 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deal Tracker</title>
+  <title>Deal Tracker ⚡ Retro Mode</title>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
-  <style>
-    /* optional fallback if style.css missing */
-    body { background:#0b0503; color:#ffb000; font-family:'VT323',monospace; }
-  </style>
 </head>
 <body>
   <div class="crt-container">
-    <h1>💾 DEAL TRACKER</h1>
-    <p>Scans your selected sources for deals below a target percentage of TCGplayer market price.</p>
+    <div class="power-light on"></div>
+    <h1>Deal Tracker ⚡</h1>
+    <p class="subtitle">Find undervalued deals below market price across marketplaces.</p>
 
-    <h2>Scan Settings</h2>
+    <div class="input-section">
+      <label>Search term:</label>
+      <input id="search-term" placeholder="e.g. Charizard EX" />
 
-    <label>
-      Search term:
-      <input id="search-term" placeholder="e.g. Charizard EX, Pokémon booster box" />
-    </label>
+      <label>Show listings under (% of market):</label>
+      <input id="percentage" type="number" value="40" step="1" />
 
-    <label for="percentage">
-  Show deals priced below
-  <input id="percentage" type="number" value="00" min="0" max="100" step="1">
-  % of market price
-  <span class="hint">(e.g. 40 % → shows anything under 40 % of market value)</span>
-</label>
+      <div class="sources">
+        <label><input type="checkbox" name="source" value="tcgplayer" checked> TCGplayer</label>
+        <label><input type="checkbox" name="source" value="ebay" checked> eBay</label>
+        <label><input type="checkbox" name="source" value="amazon"> Amazon</label>
+        <label><input type="checkbox" name="source" value="walmart"> Walmart</label>
+        <label><input type="checkbox" name="source" value="target"> Target</label>
+      </div>
 
-    <div id="sources">
-      <h3>Sources</h3>
-      <label><input type="checkbox" name="source" value="tcgplayer" checked> TCGplayer</label>
-      <label><input type="checkbox" name="source" value="ebay" checked> eBay</label>
-      <label><input type="checkbox" name="source" value="amazon"> Amazon</label>
+      <button id="scan-btn">SCAN NOW ⚡</button>
+      <p id="status" class="status"></p>
+    </div>
+
+    <div id="results" class="results"></div>
+  </div>
+
+  <script>
+    async function runScan() {
+      const term = document.getElementById("search-term").value.trim();
+      const pct = parseFloat(document.getElementById("percentage").value);
+      const checkedSources = Array.from(document.querySelectorAll("input[name=source]:checked")).map(cb => cb.value);
+      const status = document.getElementById("status");
+      const resultsContainer = document.getElementById("results");
+
+      if (!term) {
+        status.textContent = "⚠️ Please enter a search term first.";
+        return;
+      }
+
+      resultsContainer.innerHTML = "";
+      status.textContent = "⚙️ Scanning marketplaces...";
+      document.getElementById("scan-btn").disabled = true;
+
+      try {
+        const res = await fetch("/manual-scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ term, percentage: pct, sources: checkedSources }),
+        });
+
+        const data = await res.json();
+        document.getElementById("scan-btn").disabled = false;
+
+        if (!data.success) {
+          status.textContent = "⚠️ Error: " + (data.error || "Unknown error");
+          return;
+        }
+
+        status.textContent = `✅ Found ${data.deals.length} deals under ${pct}% of market price.`;
+        renderResults(data.deals, data.marketPrice);
+      } catch (err) {
+        console.error(err);
+        status.textContent = "⚠️ Something went wrong. Please try again later.";
+        document.getElementById("scan-btn").disabled = false;
+      }
+    }
+
+    function renderResults(deals, marketPrice) {
+      const container = document.getElementById("results");
+      container.innerHTML = "";
+
+      if (!deals || deals.length === 0) {
+        container.innerHTML = "<p>No deals found. Try adjusting your percentage or sources.</p>";
+        return;
+      }
+
+      deals.forEach(d => {
+        const div = document.createElement("div");
+        div.className = "deal";
+        div.innerHTML = `
+          <h3>${d.title}</h3>
+          <p>${d.source} • $${d.price.toFixed(2)} vs $${marketPrice?.toFixed(2) ?? "?"} market • ${d.pctBelowMarket}% below</p>
+          <a href="${d.link}" target="_blank">View Deal →</a>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("scan-btn").addEventListener("click", runScan);
+  </script>
+</body>
+</html>
       <label><input type="checkbox" name="source" value="walmart"> Walmart</label>
       <label><input type="checkbox" name="source" value="target"> Target</label>
     </div>
