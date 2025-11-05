@@ -12,6 +12,7 @@
     "axios": "^1.5.1",
     "cheerio": "^1.0.0-rc.12",
     "nodemailer": "^6.9.4",
-    "node-cron": "^3.0.2"
+    "node-cron": "^3.0.2",
+    "dotenv": "^16.3.1"
   }
 }
