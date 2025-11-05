@@ -5,102 +5,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Deal Tracker</title>
   <link rel="stylesheet" href="/style.css" />
+  <style>
+    /* optional fallback if style.css missing */
+    body { background:#0b0503; color:#ffb000; font-family:'VT323',monospace; }
+  </style>
 </head>
 <body>
   <div class="crt-container">
-    <h1>Deal Tracker</h1>
-    <p>Automatically scans search options every 3 hours. Use manual scan or add search options below.</p>
+    <h1>💾 DEAL TRACKER</h1>
+    <p>Scans your selected sources for deals below a target percentage of TCGplayer market price.</p>
+
     <h2>Scan Settings</h2>
-    <label>Percentage threshold:
-      <input type="number" id="percentage" value="0" min="0" max="100" step="1"> %
+
+    <label>
+      Search term:
+      <input id="search-term" placeholder="e.g. Charizard EX, Pokémon booster box" />
     </label>
-    <input id="search-term" placeholder="Enter search term">
-<input id="percentage" type="number" value="40">
-<div>
-  <label><input type="checkbox" name="source" value="tcgplayer" checked> TCGplayer</label>
-  <label><input type="checkbox" name="source" value="ebay" checked> eBay</label>
-  <label><input type="checkbox" name="source" value="amazon"> Amazon</label>
-  <label><input type="checkbox" name="source" value="walmart"> Walmart</label>
-  <label><input type="checkbox" name="source" value="target"> Target</label>
-</div>
-<button id="scan-btn">SCAN</button>
 
-<div id="status" class="status"></div>
-<div id="results"></div>
+    <label>
+      Percentage threshold:
+      <input id="percentage" type="number" value="40" min="0" max="100" step="1"> %
+    </label>
 
-    <button id="manual-scan">Run Manual Scan</button>
-    <h2>Search Options</h2>
-    <ul id="options-list"></ul>
-    <form id="add-option-form">
-      <input type="text" id="new-option" placeholder="Enter product line (e.g., pokemon, yugioh)" required />
-      <button type="submit">Add Option</button>
-    </form>
+    <div id="sources">
+      <h3>Sources</h3>
+      <label><input type="checkbox" name="source" value="tcgplayer" checked> TCGplayer</label>
+      <label><input type="checkbox" name="source" value="ebay" checked> eBay</label>
+      <label><input type="checkbox" name="source" value="amazon"> Amazon</label>
+      <label><input type="checkbox" name="source" value="walmart"> Walmart</label>
+      <label><input type="checkbox" name="source" value="target"> Target</label>
+    </div>
+
+    <button id="scan-btn">🕹️ SCAN</button>
+
+    <div id="status" class="status"></div>
+
     <h2>Results</h2>
-    <div id="results"></div>
-    <p id="status"></p>
+    <div id="results" class="crt-screen scanline"></div>
   </div>
-  <script>
-    async function fetchOptions() {
-      const res = await fetch('/settings');
-      const data = await res.json();
-      const list = document.getElementById('options-list');
-      list.innerHTML = '';
-      data.searchOptions.forEach(opt => {
-        const li = document.createElement('li');
-        li.textContent = opt;
-        list.appendChild(li);
-      });
-    }
 
-    function renderResults(results) {
-      const resultsContainer = document.getElementById('results');
-      resultsContainer.innerHTML = '';
-      if (!results || results.length === 0) {
-        resultsContainer.textContent = 'No deals found for current scan.';
-        return;
-      }
-      results.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'deal';
-        div.innerHTML =
-          '<h3>' + item.title + '</h3>' +
-          '<p>Source: ' + item.source + '</p>' +
-          '<p>Price: $' + item.price.toFixed(2) + ' | Market: $' + item.marketPrice.toFixed(2) + '</p>' +
-          '<a href="' + item.link + '" target="_blank">View Deal</a>';
-        resultsContainer.appendChild(div);
-      });
-    }
-
-    document.getElementById('manual-scan').addEventListener('click', async () => {
-      const status = document.getElementById('status');
-      status.textContent = 'Running scan...';
-      const pct = parseFloat(document.getElementById('percentage').value) || 40;
-      const checkedSources = Array.from(document.querySelectorAll('#sources input[type=checkbox]:checked')).map(cb => cb.value);
-      const res = await fetch('/manual-scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ percentage: pct, sources: checkedSources })
-      });
-      const data = await res.json();
-      status.textContent = data.message || '';
-      renderResults(data.results);
-    });
-
-    document.getElementById('add-option-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const newOpt = document.getElementById('new-option').value.trim();
-      if (!newOpt) return;
-      await fetch('/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newOption: newOpt })
-      });
-      document.getElementById('new-option').value = '';
-      await fetchOptions();
-    });
-
-    fetchOptions();
-  </script>
+  <!-- Main logic -->
   <script src="/script.js"></script>
 </body>
 </html>
