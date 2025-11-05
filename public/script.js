@@ -15,12 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function manualScan() {
     const term = termInput.value.trim();
-    const percentage = Number(pctInput.value) || 40;
+    const percentage = Number(pctInput.value) || 0;
     const sources = getSelectedSources();
 
     resultsDiv.innerHTML = '';
     statusDiv.textContent = `SCANNING "${term}" — ${percentage}% — sources: ${sources.join(', ')}`;
     statusDiv.classList.add('scanning');
+    // In script.js, near where you read the percentage input:
+pctInput.addEventListener('input', () => {
+  const val = Number(pctInput.value);
+  pctInput.title = `Show items cheaper than ${val}% of TCGplayer's market price`;
+});
+
 
     try {
       const resp = await fetch('/manual-scan', {
