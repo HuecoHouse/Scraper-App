@@ -1,37 +1,176 @@
-body {
-  background:#0b0503;
-  color:#ffb000;
-  font-family:'VT323', monospace;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:100vh;
+/* ---------- GLOBAL AMBER CRT STYLES ---------- */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: radial-gradient(ellipse at center, #0b0503 0%, #000000 100%);
+  color: #ffb000;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
 }
+
+/* ---------- CRT CONTAINER ---------- */
 .crt-container {
-  background:#120a04;
-  border:10px solid #4b2a05;
-  padding:20px;
-  box-shadow:0 0 40px rgba(255,176,0,0.3), inset 0 0 12px rgba(255,176,0,0.3);
-  border-radius:10px;
-  max-width:900px;
-  width:90%;
+  position: relative;
+  background: #120a04;
+  border: 10px solid #4b2a05;
+  border-radius: 12px;
+  padding: 25px 35px;
+  width: 90%;
+  max-width: 900px;
+  box-shadow:
+    0 0 40px rgba(255,176,0,0.25),
+    0 0 120px rgba(255,176,0,0.1),
+    inset 0 0 15px rgba(255,176,0,0.25);
+  text-align: left;
+  line-height: 1.5;
+  color: #ffb000;
+  text-shadow: 0 0 6px rgba(255,176,0,0.45);
 }
-.crt-screen.scanline {
-  background:repeating-linear-gradient(
-    rgba(255,176,0,0.05) 0px,
-    rgba(255,176,0,0.05) 2px,
-    rgba(0,0,0,0.2) 3px
+
+/* ---------- SCANLINE EFFECT ---------- */
+.crt-container::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    rgba(255,176,0,0.03) 0px,
+    rgba(255,176,0,0.03) 2px,
+    rgba(0,0,0,0.08) 3px
   );
+  pointer-events: none;
+  mix-blend-mode: overlay;
 }
+
+/* ---------- HEADINGS ---------- */
+h1, h2, h3 {
+  color: #ffb000;
+  text-shadow: 0 0 10px rgba(255,176,0,0.6);
+  margin-bottom: 8px;
+}
+h1 {
+  font-size: 2.4rem;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* ---------- INPUTS AND BUTTONS ---------- */
+input[type="text"], input[type="number"] {
+  background: #1a0c04;
+  border: 1px solid #ffb00044;
+  color: #ffb000;
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  padding: 6px 8px;
+  margin: 5px 8px 10px 0;
+  border-radius: 4px;
+  outline: none;
+  width: auto;
+}
+input::placeholder {
+  color: #ffb00055;
+}
+
+label {
+  display: inline-block;
+  margin: 5px 10px 10px 0;
+}
+
+button {
+  background: #ffb000;
+  color: #120a04;
+  border: none;
+  font-family: 'VT323', monospace;
+  font-size: 1.2rem;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(255,176,0,0.4);
+  transition: all 0.2s ease;
+}
+button:hover {
+  background: #ffd766;
+  box-shadow: 0 0 20px rgba(255,176,0,0.7);
+}
+button:active {
+  background: #cc9100;
+}
+
+/* ---------- STATUS + ANIMATION ---------- */
 .status {
-  margin:15px 0;
-  text-shadow:0 0 10px rgba(255,176,0,0.5);
+  margin-top: 20px;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(255,176,0,0.5);
 }
 .status.scanning {
-  animation:flicker 1.2s infinite;
+  animation: flicker 1.2s infinite;
 }
+
 @keyframes flicker {
-  0%{opacity:1}
-  50%{opacity:0.6}
-  100%{opacity:1}
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ---------- RESULTS LIST ---------- */
+#results {
+  margin-top: 20px;
+  background: #1a0c04;
+  border: 1px solid #4b2a05;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 15px rgba(255,176,0,0.05);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* ---------- DEAL CARD ---------- */
+.deal-card {
+  border-bottom: 1px dashed rgba(255,176,0,0.2);
+  padding: 10px 0;
+}
+.deal-card:last-child {
+  border-bottom: none;
+}
+
+.deal-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(255,176,0,0.5);
+}
+.deal-meta {
+  font-size: 0.95rem;
+  color: #ffb000cc;
+}
+.deal-card a {
+  color: #ffd766;
+  text-decoration: none;
+}
+.deal-card a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- SCROLLBAR ---------- */
+#results::-webkit-scrollbar {
+  width: 6px;
+}
+#results::-webkit-scrollbar-thumb {
+  background-color: rgba(255,176,0,0.3);
+  border-radius: 3px;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 600px) {
+  .crt-container {
+    padding: 20px;
+    font-size: 16px;
+  }
+  h1 { font-size: 1.8rem; }
+  input, button { font-size: 1rem; }
 }
