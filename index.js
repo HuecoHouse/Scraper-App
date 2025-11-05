@@ -1,16 +1,3 @@
-// 🧩 Simple Pokémon Deal Tracker (Node.js + Express + Cheerio)
-// Checks TCGplayer listings for deals >= 30% under market
-// Email notifications via Nodemailer
-
-// === 1. Install dependencies ===
-// npm init -y
-// npm install express axios cheerio nodemailer node-cron dotenv
-
-// === 2. Create .env file ===
-// EMAIL_USER=your_email@gmail.com
-// EMAIL_PASS=your_app_password
-// RECEIVER_EMAIL=stishficks01@gmail.com
-
 import express from 'express';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
@@ -21,8 +8,14 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
+app.use(express.json());
+app.use(express.static('public'));
+
 const PORT = process.env.PORT || 3000;
 const MIN_DISCOUNT = 0.3; // 30%
+
+// Initial search options, representing product lines on TCGplayer
+let searchOptions = ['pokemon'];
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -32,7 +25,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// --- Helper: Send Email ---
+// Send email notification
 async function sendEmail(subject, message) {
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
@@ -42,10 +35,10 @@ async function sendEmail(subject, message) {
   });
 }
 
-// --- Scraper Function ---
-async function scanTCGPlayer() {
-  console.log('🔍 Scanning TCGplayer...');
-  const url = 'https://www.tcgplayer.com/search/pokemon/product?page=1&productLineName=pokemon';
+// Scrape TCGplayer deals for a given product line
+async function scanTCGPlayer(productLine = 'pokemon') {
+  console.log(`🔍 Scanning TCGplayer for ${productLine}...`);
+  const url = `https://www.tcgplayer.com/search/${productLine}/product?page=1&productLineName=${productLine}`;
 
   const { data } = await axios.get(url, {
     headers: {
@@ -71,23 +64,51 @@ async function scanTCGPlayer() {
   });
 
   if (items.length > 0) {
-    let body = '🔥 Pokémon Deals Found:\n\n';
+    let body = `🔥 ${productLine.toUpperCase()} Deals Found:\n\n`;
     items.forEach((i) => {
       body += `${i.title}\nMarket: $${i.market} | Listing: $${i.listing}\n${i.link}\n\n`;
     });
     console.log('📩 Sending email...');
-    await sendEmail('🔥 New Pokémon Deals Found!', body);
+    await sendEmail(`🔥 New ${productLine.toUpperCase()} Deals Found!`, body);
   } else {
-    console.log('No deals found this cycle.');
+    console.log(`No deals found for ${productLine} this cycle.`);
   }
 }
 
-// --- Schedule every 3 hours ---
-cron.schedule('0 */3 * * *', scanTCGPlayer);
+// Run scan for all search options
+async function runScanAll() {
+  for (const opt of searchOptions) {
+    await scanTCGPlayer(opt);
+  }
+}
 
-// --- Simple web interface ---
+// Schedule scanning every 3 hours
+cron.schedule('0 */3 * * *', runScanAll);
+
+// API endpoints
+app.get('/settings', (req, res) => {
+  res.json({ searchOptions });
+});
+
+app.post('/settings', (req, res) => {
+  const { newOption } = req.body;
+  if (newOption) {
+    const opt = newOption.toLowerCase();
+    if (!searchOptions.includes(opt)) {
+      searchOptions.push(opt);
+    }
+  }
+  res.json({ searchOptions });
+});
+
+app.post('/manual-scan', async (req, res) => {
+  await runScanAll();
+  res.json({ message: 'Manual scan completed.' });
+});
+
+// Serve index.html from public folder on root path
 app.get('/', (req, res) => {
-  res.send('<h1>Pokémon Deal Tracker is running ✅</h1><p>Scanning TCGplayer every 3 hours.</p>');
+  res.sendFile('index.html', { root: 'public' });
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
