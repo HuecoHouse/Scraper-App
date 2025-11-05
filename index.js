@@ -11,9 +11,9 @@ app.use(express.json());
 app.use(express.static('public'));
 
 const PORT = process.env.PORT || 3000;
-const THRESHOLD_RATIO = 0.4;
 let searchOptions = ['pokemon'];
 
+// Fetch TCGplayer market price for product line
 async function fetchTCGMarketPrice(productLine) {
   try {
     const url = `https://www.tcgplayer.com/search/${productLine}/product`;
@@ -28,11 +28,12 @@ async function fetchTCGMarketPrice(productLine) {
   }
 }
 
-async function scrapeTCGplayer(productLine) {
+// Scrape TCGplayer deals below threshold ratio
+async function scrapeTCGplayer(productLine, ratio) {
   const deals = [];
   const marketPrice = await fetchTCGMarketPrice(productLine);
   if (!marketPrice) return deals;
-  const threshold = marketPrice * THRESHOLD_RATIO;
+  const threshold = marketPrice * ratio;
   const url = `https://www.tcgplayer.com/search/${productLine}/product?productLineName=${productLine}`;
   const response = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
   const $ = cheerio.load(response.data);
@@ -48,11 +49,12 @@ async function scrapeTCGplayer(productLine) {
   return deals;
 }
 
-async function scrapeEbay(productLine) {
+// Scrape eBay deals below threshold ratio
+async function scrapeEbay(productLine, ratio) {
   const deals = [];
   const marketPrice = await fetchTCGMarketPrice(productLine);
   if (!marketPrice) return deals;
-  const threshold = marketPrice * THRESHOLD_RATIO;
+  const threshold = marketPrice * ratio;
   const searchQuery = encodeURIComponent(`${productLine} cards`);
   const url = `https://www.ebay.com/sch/i.html?_nkw=${searchQuery}`;
   const response = await axios.get(url);
@@ -69,34 +71,47 @@ async function scrapeEbay(productLine) {
   return deals;
 }
 
-async function scrapeRetailers(productLine) {
+// Placeholder for scraping other retailers like Walmart, Target, Amazon
+async function scrapeRetailers(productLine, ratio, sources = []) {
+  // Could implement scraping for each store; return empty for now
   return [];
 }
 
-async function scanProduct(productLine) {
-  const results = [];
-  const tcgDeals = await scrapeTCGplayer(productLine);
-  const ebayDeals = await scrapeEbay(productLine);
-  const retailDeals = await scrapeRetailers(productLine);
-  return results.concat(tcgDeals, ebayDeals, retailDeals);
+// Scan product across selected sources and ratio
+async function scanProduct(productLine, ratio, sources) {
+  let results = [];
+  if (!sources || sources.includes('tcgplayer')) {
+    const tcgDeals = await scrapeTCGplayer(productLine, ratio);
+    results = results.concat(tcgDeals);
+  }
+  if (!sources || sources.includes('ebay')) {
+    const ebayDeals = await scrapeEbay(productLine, ratio);
+    results = results.concat(ebayDeals);
+  }
+  if (!sources || sources.some(src => ['walmart','target','amazon'].includes(src))) {
+    const retailDeals = await scrapeRetailers(productLine, ratio, sources);
+    results = results.concat(retailDeals);
+  }
+  return results;
 }
 
-async function runScanAll() {
+// Run scans for all search options (default ratio 0.4 and all sources)
+async function runScanAll(ratio = 0.4, sources) {
   let allResults = [];
   for (const opt of searchOptions) {
-    const deals = await scanProduct(opt);
+    const deals = await scanProduct(opt, ratio, sources);
     allResults = allResults.concat(deals);
   }
   return allResults;
 }
 
-// schedule scanning every 3 hours
+// Scheduled scanning every 3 hours using default ratio and all sources
 cron.schedule('0 */3 * * *', async () => {
   const results = await runScanAll();
   console.log('Scheduled scan completed', results);
 });
 
-// settings API
+// Settings endpoints
 app.get('/settings', (req, res) => {
   res.json({ searchOptions });
 });
@@ -110,13 +125,19 @@ app.post('/settings', (req, res) => {
   res.json({ searchOptions });
 });
 
+// Manual scan endpoint with custom percentage and sources
 app.post('/manual-scan', async (req, res) => {
-  const results = await runScanAll();
-  res.json({ results });
+  let { percentage, sources } = req.body;
+  const ratio = (parseFloat(percentage) || 40) / 100;
+  const results = await runScanAll(ratio, sources);
+  const message = results.length ? '' : 'No deals found for current scan.';
+  res.json({ results, message });
 });
 
+// Root route
 app.get('/', (req, res) => {
   res.sendFile('index.html', { root: 'public' });
 });
 
+// Start server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
