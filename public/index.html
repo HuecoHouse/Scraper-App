@@ -22,10 +22,12 @@
       <input id="search-term" placeholder="e.g. Charizard EX, Pokémon booster box" />
     </label>
 
-    <label>
-      Percentage threshold:
-      <input id="percentage" type="number" value="40" min="0" max="100" step="1"> %
-    </label>
+    <label for="percentage">
+  Show deals priced below
+  <input id="percentage" type="number" value="00" min="0" max="100" step="1">
+  % of market price
+  <span class="hint">(e.g. 40 % → shows anything under 40 % of market value)</span>
+</label>
 
     <div id="sources">
       <h3>Sources</h3>
